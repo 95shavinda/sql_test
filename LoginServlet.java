@@ -1,39 +1,47 @@
-import sqlite3
-import time
-import datetime
-import random
-
-conn = sqlite3.connect('tutorial.db')
-c = conn.cursor()
-
-def create_table():
-    c.execute("SELECT username,rank FROM users WHERE rank = '{0}'".format(rank))
-
-
-def data_entry():
-    c.execute("INSERT INTO stuffToPlot VALUES(1452549219,'2016-01-11 13:53:39','Python',6)")
-    
-    conn.commit()
-    c.close()
-    conn.close()
-
-def dynamic_data_entry():
-
-    unix = int(time.time())
-    date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
-    keyword = 'Python'
-    value = random.randrange(0,10)
-
-    c.execute("INSERT INTO stuffToPlot (unix, datestamp, keyword, value) VALUES (?, ?, ?, ?)",
-          (unix, date, keyword, value))
-
-    conn.commit()
-    
-#create_table()
-#data_entry()
-
-for i in range(10):
-    dynamic_data_entry()
-    time.sleep(1)
-c.close
-conn.close()
+package com.journaldev.examples;
+import java.io.IOException;
+import java.sql.*;
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+ 
+@WebServlet("/LoginServlet")
+public class LoginServlet extends HttpServlet {
+    static {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (Exception e) {}
+    }
+ 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        boolean success = false;
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        // Unsafe query which uses string concatenation
+        String query = "SELECT username,rank FROM users WHERE rank ='" + username + "' and password = '" + password + "'";
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/user", "root", "root");
+            stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            if (rs.next()) {
+                // Login Successful if match is found
+                success = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                stmt.close();
+                conn.close();
+            } catch (Exception e) {}
+        }
+        if (success) {
+            response.sendRedirect("home.html");
+        } else {
+            response.sendRedirect("login.html?error=1");
+        }
+    }
+}
